@@ -1,0 +1,38 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "1.0.0",
+        "title": "HC - API",
+        "description": "HC - API for fronetend web app"
+    },
+    "host": "https://cloud.HC.com:3000",
+    "basePath": "/",
+    "securityDefinitions": {
+        "jwt": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "x-access-token"
+        }
+    },
+    "security": [
+        {
+            "jwt": []
+        }
+    ],
+    "tags": [
+
+    ],
+    "schemes": [
+        "https"
+    ],
+    "consumes": [
+        "application/json",
+        "multipart/form-data"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "paths":  {
+
+    }
+}

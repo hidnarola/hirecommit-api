@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>HireCommit</title>
+</head>
+
+<body>
+    <table style="background:#1d2a44; border:0; width:100%; border-spacing:0; padding:5% 5% 0; font-family:'Arial';">
+        <tr>
+            <td style="width:100%; margin:40px auto; border:0;">
+                <table style="border:0; width:100%; border-spacing:0;">
+                    <tr>
+                        <td style="padding:0 0 25px 0;"><img
+                                src="https://marketing-image-production.s3.amazonaws.com/uploads/eefd9917b957c9391dac1eb0737fe1850838b6779c53f5d01a69bba5e40121d068a2a29f0a2247666eb14564f235ff522afb256f66107403bab239e085fd637a.png"
+                                alt="" /></td>
+                    </tr>
+                    <tr>
+                        <td
+                            style="background:#fff; border-radius:4px; border:0; border-top:7px solid #bf7a68; padding:30px;">
+
+                            <table style="width:100%; margin:0; border:0; border-spacing:0;">
+                                <tr>
+                                    <td style=" padding:0 0 20px;font-size:14px; color:#666; line-height:24px;">Hi
+                                        <%= name %></td>
+                                </tr>
+                                <tr>
+                                    <td style=" padding:0 0 30px; font-size:14px; color:#666; line-height:24px;">
+                                        Please review list of Candidates with UnOpened emails which are past the no. of
+                                        days set as per the alerts.</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <table style="border:1px solid #eee; margin:0; border-spacing:0; width: 100%;">
+                                            <thead>
+                                                <tr>
+                                                    <th colspan="5"
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; font-size:14px; color:#333; font-weight:bold; background: #bf7a68; text-align:center;">
+                                                        Offer Email</th>
+                                                </tr>
+                                                <tr>
+                                                    <th
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; font-size:14px; color:#333; font-weight:bold; background: #eee; text-align:left;">
+                                                        Name</th>
+                                                    <th
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; border-left:1px solid #eee; font-size:14px; color:#333; font-weight:bold;background: #eee; text-align: left;">
+                                                        Email</th>
+                                                    <th
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; border-left:1px solid #eee; font-size:14px; color:#333; font-weight:bold;background: #eee; text-align: left;">
+                                                        Subject</th>
+                                                    <th
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; border-left:1px solid #eee; font-size:14px; color:#333; font-weight:bold;background: #eee; text-align: left;">
+                                                        Not Replied Days</th>
+                                                    <th
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; border-left:1px solid #eee; font-size:14px; color:#333; font-weight:bold;background: #eee; text-align: left;">
+                                                        Priority</th>
+                                                </tr>
+                                            </thead>
+                                            <% for(var i=0; i < data.length; i++) { %>
+                                            <tbody>
+                                                <tr>
+                                                    <td
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; font-size:12px; font-size:#333; font-weight:normal">
+                                                        <%= data[i].candidatename %></td>
+                                                    <td
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; border-left:1px solid #eee; font-size:12px; color:#333; font-weight:normal">
+                                                        <%= data[i].candidateemail %></td>
+                                                    <td
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; border-left:1px solid #eee; font-size:12px; color:#333; font-weight:normal">
+                                                        <%= data[i].subject %></td>
+                                                    <td
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; border-left:1px solid #eee; font-size:12px; color:#333; font-weight:normal">
+                                                        <%= data[i].not_replied_days %></td>
+                                                    <td
+                                                        style="border:0; border-bottom:1px solid #eee; padding:10px; border-left:1px solid #eee; font-size:12px; color:#333; font-weight:normal">
+                                                        <%= data[i].priority %></td>
+                                                </tr>
+
+                                            <tbody>
+                                                <% } %>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style=" padding:20px 0 10px; font-size:14px; color:#666; line-height:24px;">You
+                                        can
+                                        access HireCommit employer
+                                        dashboard at employer.hireccomit.com</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:0; border:0;">
+                                        <small style="display:block; font-size:14px; color:#666;">Best,</small>
+                                        <strong style="color:#1d2a44; font-size:14px;">HireCommit Team</strong>
+                                    </td>
+                                </tr>
+
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr>
+            <td style="margin:0; padding:20px 15px 20px 30px; border:0; border-spacing:0;">
+                <table style="width:100%; border:0; border-spacing:0;">
+                    <tr>
+                        <td style="font-size:14px; color:#cacaca; line-height:26px;">© Copyright <a href=""
+                                style="text-decoration:underline; color:#bf7a68;">HireCommit</a> - 2019 | All Rights
+                            Reserved.</td>
+                        <td style="text-align:right;">
+                            <a href="" style="margin:0 0 0 10px; display:inline-block; vertical-align:top;"><img
+                                    style="width:26px; height:26px;"
+                                    src="https://hirecommit.com:3000/images/facebook.svg" alt="" /></a>
+                            <a href="" style="margin:0 0 0 10px; display:inline-block; vertical-align:top;"><img
+                                    style="width:26px; height:26px;"
+                                    src="https://hirecommit.com:3000/images/twitter.svg" alt="" /></a>
+                            <a href="" style="margin:0 0 0 10px; display:inline-block; vertical-align:top;"><img
+                                    style="width:26px; height:26px;"
+                                    src="https://hirecommit.com:3000/images/linkedin.svg" alt="" /></a>
+                            <a href="" style="margin:0 0 0 10px; display:inline-block; vertical-align:top;"><img
+                                    style="width:26px; height:26px;"
+                                    src="https://hirecommit.com:3000/images/youtube.svg" alt="" /></a>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
