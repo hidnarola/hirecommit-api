@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const ObjectId = require('mongodb').ObjectID;
 const btoa = require('btoa');
+const moment = require("moment")
 const aws = require('aws-sdk');
 
 const S3_BUCKET = config.BUCKET_NAME;
@@ -187,10 +188,10 @@ router.post("/candidate_register", async (req, res) => {
         notEmpty: true,
         errorMessage: "contactno is required"
       },
-      "recaptcha": {
-        notEmpty: true,
-        errorMessage: "captcha is required"
-      }
+      // "recaptcha": {
+      //   notEmpty: true,
+      //   errorMessage: "captcha is required"
+      // }
     };
 
     var validate = passwordValidatorSchema
@@ -288,9 +289,14 @@ router.post("/candidate_register", async (req, res) => {
                     });
                     const folder = 'candidate/document'
                     s3bucket.createBucket(function () {
+                      var currentfilename = file.name;
+                      var rename = currentfilename.split('.');
+                      var timestamp = moment().format();
+                      var uploded_file = rename[0] + '-' + timestamp + '.' + rename[1];
+
                       var params = {
                         Bucket: S3_BUCKET,
-                        Key: `${folder}/${file.name}`,
+                        Key: `${folder}/${uploded_file}`,
                         Body: file.data,
                         ContentType: file.mimetype,
                       };
@@ -367,6 +373,59 @@ router.post("/candidate_register", async (req, res) => {
     return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
   }
 });
+
+
+router.get("/candidate_image", async (req, res) => {
+  console.log(req.body.key);
+  AWS.config.update({ accessKeyId: config.ACCESS_KEY_ID, secretAccessKey: config.SECRET_ACCESS_KEY, region: 'myregion' });
+  var params = {
+    Bucket: config.S3_BUCKET,
+    Delimiter: '/candidate/document',
+  }
+  // var s3 = new aws.S3();
+  // const s3 = new aws.S3();
+  // const s3Params = {
+  //   Bucket: S3_BUCKET,
+  //   Key: req.body.key
+  // };
+
+  // console.log(' : s3 ==> ', s3Params);
+  // s3.getObject(s3Params, function (err, data) {
+  //   res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+  //   res.write(data, 'binary');
+  //   res.status(200).send('success', data);
+  //   res.end(null, 'binary');
+  // });
+
+  // const s3 = new aws.S3();
+  const fileName = req.body.key;
+  // const fileType = req.body.mimetype;
+  aws.config.region = 'us-east-1';
+  const s3 = new aws.S3({
+    signatureVersion: 'v4',
+    // region: process.env.S3_REGION,
+    accessKeyId: config.ACCESS_KEY_ID,
+    secretAccessKey: config.S3_SECRET_ACCESS_KEY
+  });
+  const s3Params = {
+    Bucket: S3_BUCKET,
+    Key: fileName
+  };
+
+  s3.getObject(s3Params, (err, data) => {
+    console.log(' : data ==> ', data);
+    if (err) {
+      console.log(err);
+      return res.end();
+    }
+    const returnData = {
+      signedRequest: data,
+      url: `https://${S3_BUCKET}.s3.amazonaws.com/candidate/document/${fileName}`
+    };
+    res.write(JSON.stringify(returnData));
+    res.end();
+  });
+})
 
 router.post('/check_document_size', async (req, res) => {
   try {
