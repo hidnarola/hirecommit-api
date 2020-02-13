@@ -6,6 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const ObjectId = require('mongodb').ObjectID;
 const btoa = require('btoa');
+const aws = require('aws-sdk');
+
+const S3_BUCKET = config.BUCKET_NAME;
 
 
 const _ = require('underscore');
@@ -273,113 +276,80 @@ router.post("/candidate_register", async (req, res) => {
                   "document_verified": false
                 };
 
-                async.waterfall(
-                  [
-                    function (callback) {
-                      if (req.files && req.files["documentimage"]) {
-                        var image_path_array = [];
-                        var file = req.files['documentimage'];
-                        var files = [].concat(req.files.documentimage);
-                        var dir = "./upload";
-                        var filename = file.name;
-                        async.eachSeries(
-                          files,
-                          function (file, loop_callback) {
-                            var mimetype = path.extname(file.name);
-                            var mimetype = ["image/jpeg", "image/png", 'application/pdf'];
-                            if (mimetype.indexOf((file.mimetype).toLowerCase()) != -1) {
-                              if (!fs.existsSync(dir)) {
-                                fs.mkdirSync(dir);
-                              }
-                              var filename = file.name;
-                              file.mv(dir + "/" + filename, function (err) {
-                                if (err) {
-                                  logger.error("There was an issue in uploading");
-                                  loop_callback({
-                                    status: config.MEDIA_ERROR_STATUS,
-                                    err: "There was an issue in uploading"
-                                  });
-                                } else {
-                                  logger.trace(
-                                    "image has been uploaded. File name = ",
-                                    filename
-                                  );
-                                  location = filename;
-                                  image_path_array.push(location);
-                                  loop_callback();
-                                }
-                              });
-                            } else {
-                              logger.error(" format is invalid");
-                              loop_callback({
-                                status: config.VALIDATION_FAILURE_STATUS,
-                                err: " format is invalid"
-                              });
-                            }
-                          },
-                          function (err) {
-                            if (err) {
-                              res.status(err.status).json(err);
-                            } else {
-                              callback(null, image_path_array);
-                            }
-                          }
-                        );
-                      } else {
-                        logger.info(
-                          "File not available to upload. Executing next instruction"
-                        );
-                        callback(null, []);
-                      }
-                    }
-                  ],
-                  async (err, image_path_array) => {
-                    reg_obj.documentimage = image_path_array;
+                if (req.files && req.files["documentimage"]) {
 
-                    var interest_resp = await Candidate_Detail.findOneAndUpdate({ user_id: interest_user_resp._id }, reg_obj, {
-                      new: true,
-                      upsert: true
+                  const file = req.files["documentimage"];
+                  let mimetype = file.mimetype;
+                  if (mimetype === "image/jpg" || mimetype === "image/jpeg" || mimetype === "image/png" || mimetype === 'application/pdf') {
+                    let s3bucket = new aws.S3({
+                      accessKeyId: config.ACCESS_KEY_ID,
+                      secretAccessKey: config.SECRET_ACCESS_KEY,
+                      Bucket: S3_BUCKET,
                     });
+                    const folder = 'candidate/document'
+                    s3bucket.createBucket(function () {
+                      var params = {
+                        Bucket: S3_BUCKET,
+                        Key: `${folder}/${file.name}`,
+                        Body: file.data,
+                        ContentType: file.mimetype,
+                      };
+                      s3bucket.upload(params, async function (err, data) {
+                        if (err) {
+                          console.log('error in callback');
+                          console.log(err);
+                        }
+                        // console.log('success');
+                        // console.log(data);
+                        reg_obj.documentimage = data.key;
+
+                        var interest_resp = await Candidate_Detail.findOneAndUpdate({ user_id: interest_user_resp._id }, reg_obj, {
+                          new: true,
+                          upsert: true
+                        });
 
 
-                    if (!interest_resp) {
-                      logger.debug("Error = ", interest_resp.error);
-                      res.status(config.INTERNAL_SERVER_ERROR).json(interest_resp);
-                    } else {
-                      var reset_token = Buffer.from(jwt.sign({ "_id": interest_user_resp._id, "role": "candidate" },
-                        config.ACCESS_TOKEN_SECRET_KEY, {
-                        expiresIn: 60 * 60 * 24 * 3
-                      }
-                      )).toString('base64');
+                        if (!interest_resp) {
+                          logger.debug("Error = ", interest_resp.error);
+                          res.status(config.INTERNAL_SERVER_ERROR).json(interest_resp);
+                        } else {
+                          var reset_token = Buffer.from(jwt.sign({ "_id": interest_user_resp._id, "role": "candidate" },
+                            config.ACCESS_TOKEN_SECRET_KEY, {
+                            expiresIn: 60 * 60 * 24 * 3
+                          }
+                          )).toString('base64');
 
-                      var time = new Date();
-                      time.setMinutes(time.getMinutes() + 20);
-                      time = btoa(time);
-                      var message = await common_helper.findOne(MailType, { 'mail_type': 'candidate_email_confirmation' });
+                          var time = new Date();
+                          time.setMinutes(time.getMinutes() + 20);
+                          time = btoa(time);
+                          var message = await common_helper.findOne(MailType, { 'mail_type': 'candidate_email_confirmation' });
 
-                      logger.trace("sending mail");
-                      let mail_resp = await mail_helper.send("email_confirmation_template", {
-                        "to": interest_user_resp.email,
-                        "subject": "Welcome to the HireCommit | Verify Email"
-                      }, {
-                        "msg": message.data.content,
-                        "name": interest_resp.firstname,
-                        "upper_content": message.data.upper_content,
-                        "lower_content": message.data.lower_content,
-                        "confirm_url": config.WEBSITE_URL + '/confirmation/' + reset_token
+                          logger.trace("sending mail");
+                          let mail_resp = await mail_helper.send("email_confirmation_template", {
+                            "to": interest_user_resp.email,
+                            "subject": "Welcome to the HireCommit | Verify Email"
+                          }, {
+                            "msg": message.data.content,
+                            "name": interest_resp.firstname,
+                            "upper_content": message.data.upper_content,
+                            "lower_content": message.data.lower_content,
+                            "confirm_url": config.WEBSITE_URL + '/confirmation/' + reset_token
+                          });
+
+                          if (mail_resp.status === 0) {
+                            res.status(config.INTERNAL_SERVER_ERROR).json({ "status": 0, "message": "Error occured while sending confirmation email", "error": mail_resp.error });
+                          } else {
+                            res.json({
+                              "status": 1, "message": "Candidate registration successful, confirmation mail sent to your email.", "data": interest_user_resp
+                            })
+                          }
+                        }
                       });
-
-                      if (mail_resp.status === 0) {
-                        res.status(config.INTERNAL_SERVER_ERROR).json({ "status": 0, "message": "Error occured while sending confirmation email", "error": mail_resp.error });
-                      } else {
-                        res.json({
-                          "status": 1, "message": "Candidate registration successful, confirmation mail sent to your email.", "data": interest_user_resp
-                        })
-                      }
-                    }
-
+                    });
+                  } else {
+                    res.status(config.VALIDATION_FAILURE_STATUS).json({ "status": 0, "message": "format is invalid" });
                   }
-                );
+                }
               }
               else {
                 res.status(config.BAD_REQUEST).json({ "status": 0, "message": "Registration Faild." })

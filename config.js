@@ -21,6 +21,10 @@ module.exports = {
   "SENDGRID_USER": process.env.SENDGRID_USER,
   "SENDGRID_PASSWORD": process.env.SENDGRID_PASSWORD,
 
+  "BUCKET_NAME": process.env.BUCKET_NAME,
+  "ACCESS_KEY_ID": process.env.ACCESS_KEY_ID,
+  "SECRET_ACCESS_KEY": process.env.SECRET_ACCESS_KEY,
+
   // GMAIL
   "GMAIL_USER": process.env.GMAIL_USER,
   "GMAIL_PASSWORD": process.env.GMAIL_PASSWORD,
