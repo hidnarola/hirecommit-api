@@ -375,6 +375,34 @@ router.post("/candidate_register", async (req, res) => {
   }
 });
 
+router.post("/candidate_image", async (req, res) => {
+  try {
+    const bucket = new aws.S3(
+      {
+        accessKeyId: config.ACCESS_KEY_ID,
+        secretAccessKey: config.SECRET_ACCESS_KEY,
+        region: 'us-east-1'
+      }
+    );
+
+    const params = {
+      Bucket: config.BUCKET_NAME,
+      Key: req.body.key
+    };
+
+    bucket.getObject(params, (err, data) => {
+      if (err) {
+        return res.status(config.NOT_FOUND).json({ 'message': err.message, "success": false })
+      } else {
+        let buff = new Buffer(data.Body);
+        let base64data = buff.toString('base64');
+        return res.status(config.OK_STATUS).json({ "data": 'data:image/jpg;base64,' + base64data });
+      }
+    });
+  } catch (error) {
+    return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
+  }
+});
 
 router.post('/check_document_size', async (req, res) => {
   try {
