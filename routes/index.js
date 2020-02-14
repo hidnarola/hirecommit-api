@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const ObjectId = require('mongodb').ObjectID;
 const btoa = require('btoa');
+const uuid = require('uuid/v4');
 const moment = require("moment")
 const aws = require('aws-sdk');
 
@@ -47,6 +48,8 @@ const Group = require('./../models/group');
 const userpProfile = require('./profile');
 
 router.use("/profile", auth, userpProfile);
+
+const image_auth = require('../middlewares/image_auth');
 
 const saltRounds = 10;
 var common_helper = require('./../helpers/common_helper');
@@ -269,6 +272,7 @@ router.post("/candidate_register", async (req, res) => {
                   "contactno": req.body.contactno,
                   "documenttype": req.body.documenttype,
                   "documentimage": req.body.documentImage,
+                  "docmage": '',
                   "documentNumber": req.body.documentNumber,
                   "drivingLicenseState": req.body.drivingLicenseState,
                   "user_id": interest_user_resp._id,
@@ -306,9 +310,13 @@ router.post("/candidate_register", async (req, res) => {
                           console.log('error in callback');
                           console.log(err);
                         }
-                        // console.log('success');
-                        // console.log(data);
+                        console.log({ data });
+                        const nameArray = data.key.split('.')
                         reg_obj.documentimage = data.key;
+                        reg_obj.docimage = `${folder}/${uuid()}.${
+                          nameArray[nameArray.length - 1]
+                        }`;
+                        console.log({ reg_obj });
 
                         var interest_resp = await Candidate_Detail.findOneAndUpdate({ user_id: interest_user_resp._id }, reg_obj, {
                           new: true,
@@ -375,32 +383,99 @@ router.post("/candidate_register", async (req, res) => {
   }
 });
 
-router.post("/candidate_image", async (req, res) => {
+router.get('/candidate_image', async (req, res) => {
   try {
-    const bucket = new aws.S3(
-      {
-        accessKeyId: config.ACCESS_KEY_ID,
-        secretAccessKey: config.SECRET_ACCESS_KEY,
-        region: 'us-east-1'
-      }
+    const candidateFound = await Candidate_Detail.findOne({docimage: req.query.key});
+    if (!candidateFound)
+      return res.status(404).json({ message: 'Image not found', success: false })
+
+    const Key = candidateFound.documentimage[0]
+    const tmpKey = Key.split('/')
+    const path = tmpKey.slice(0, tmpKey.length - 2).join('/')
+    const ext = tmpKey[tmpKey.length - 1].split('.').pop()
+
+    candidateFound.docimage = `${path}/${uuid()}.${ext}`
+    await Candidate_Detail.updateOne(
+      { _id: candidateFound._id },
+      { docimage: candidateFound.docimage }
     );
+
+    const bucket = new aws.S3({
+      accessKeyId: config.ACCESS_KEY_ID,
+      secretAccessKey: config.SECRET_ACCESS_KEY,
+      region: 'us-east-1'
+    });
+
+    const params = {
+      Bucket: config.BUCKET_NAME,
+      Key
+    };
+
+    bucket.getObject(params, (err, data) =>
+      err
+        ? res
+          .status(config.NOT_FOUND)
+          .json({ message: err.message, success: false });
+        : res
+          .set('Content-Type', data.ContentType)
+          .status(config.OK_STATUS)
+          .send(data.Body)
+    });
+  } catch (error) {
+    return res
+      .status(config.BAD_REQUEST)
+      .json({ message: error.message, success: false });
+  }
+});
+
+
+router.post('/image_isExists', async (req, res) => {
+  try {
+    const bucket = new aws.S3({
+      accessKeyId: config.ACCESS_KEY_ID,
+      secretAccessKey: config.SECRET_ACCESS_KEY,
+      region: 'us-east-1'
+    });
 
     const params = {
       Bucket: config.BUCKET_NAME,
       Key: req.body.key
     };
 
-    bucket.getObject(params, (err, data) => {
-      if (err) {
-        return res.status(config.NOT_FOUND).json({ 'message': err.message, "success": false })
+    bucket.headObject(params, function(err, metadata) {
+      if (err && err.code === 'NotFound') {
+        return res
+          .status(config.NOT_FOUND)
+          .json({ message: 'No Image Found.', success: false });
+        // Handle no object on cloud here
       } else {
-        let buff = new Buffer(data.Body);
-        let base64data = buff.toString('base64');
-        return res.status(config.OK_STATUS).json({ "data": 'data:image/jpg;base64,' + base64data });
+        bucket.getSignedUrl('getObject', params, (err, data) => {
+          if (err) {
+            return res
+              .status(config.VALIDATION_FAILURE_STATUS)
+              .json({ message: err.message, success: false });
+          } else {
+            return res
+              .status(config.OK_STATUS)
+              .json({ message: 'Image is Exist.', image_url: data });
+          }
+        });
       }
     });
+
+    // bucket.getObject(params, (err, data) => {
+    //   if (err) {
+    //     return res.status(config.NOT_FOUND).json({ 'message': err.message, "success": false })
+    //   } else {
+    //     let buff = new Buffer(data.Body);
+    //     let base64data = buff.toString('base64');
+    //     return res.status(config.OK_STATUS).json({ "data": 'data:image/jpg;base64,' + base64data });
+    //   }
+    // });
   } catch (error) {
-    return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
+    return res
+      .status(config.BAD_REQUEST)
+      .json({ message: error.message, success: false });
   }
 });
 
@@ -461,16 +536,26 @@ router.post('/check_document_number', async (req, res) => {
   }
 });
 
-router.post("/check_candidate_email", async (req, res) => {
+router.post('/check_candidate_email', async (req, res) => {
   try {
-    let user_resp = await common_helper.findOne(User, { "email": req.body.email.toLowerCase(), "is_del": false, "is_register": true })
+    let user_resp = await common_helper.findOne(User, {
+      email: req.body.email.toLowerCase(),
+      is_del: false,
+      is_register: true
+    });
     if (user_resp.status === 1) {
-      res.status(config.BAD_REQUEST).json({ "status": 0, "message": "Email address already Register" });
+      res
+        .status(config.BAD_REQUEST)
+        .json({ status: 0, message: 'Email address already Register' });
     } else {
-      res.status(config.OK_STATUS).json({ "status": 1, "message": "Email address not Register" });
+      res
+        .status(config.OK_STATUS)
+        .json({ status: 1, message: 'Email address not Register' });
     }
   } catch (error) {
-    return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
+    return res
+      .status(config.BAD_REQUEST)
+      .json({ message: error.message, success: false });
   }
 });
 
@@ -639,26 +724,35 @@ router.post("/check_employer_email", async (req, res) => {
   }
 });
 
-router.post("/email_exists", async (req, res) => {
+router.post('/email_exists', async (req, res) => {
   try {
     var user_id = req.body.user_id;
-    re = new RegExp(req.body.email, "i");
+    re = new RegExp(req.body.email, 'i');
     value = {
       $regex: re
     };
-    if (req.body.email && req.body.email !== "") {
+    if (req.body.email && req.body.email !== '') {
       var email = req.body.email.toLowerCase();
     }
 
-    var user_resp = await common_helper.findOne(User, { "_id": { $ne: ObjectId(user_id) }, "email": email, "is_del": false })
+    var user_resp = await common_helper.findOne(User, {
+      _id: { $ne: ObjectId(user_id) },
+      email: email,
+      is_del: false
+    });
     if (user_resp.status === 1) {
-      res.status(config.BAD_REQUEST).json({ "status": 0, "message": "Email address already Register" });
-    }
-    else {
-      res.status(config.OK_STATUS).json({ "status": 1, "message": "Email address not Register" });
+      res
+        .status(config.BAD_REQUEST)
+        .json({ status: 0, message: 'Email address already Register' });
+    } else {
+      res
+        .status(config.OK_STATUS)
+        .json({ status: 1, message: 'Email address not Register' });
     }
   } catch (error) {
-    return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
+    return res
+      .status(config.BAD_REQUEST)
+      .json({ message: error.message, success: false });
   }
 });
 
