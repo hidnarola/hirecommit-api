@@ -733,7 +733,7 @@ router.post('/login', async (req, res) => {
           res.status(config.BAD_REQUEST).json({ message: "Failed captcha verification" });
         }
         else {
-          let user_resp = await User.findOne({ "email": req.body.email.toLowerCase(), is_register: true }).populate("role_id").lean();
+          let user_resp = await User.findOne({ "email": req.body.email.toLowerCase(), is_register: true, "is_del": false }).populate("role_id").lean();
           if (!user_resp) {
             var message = await common_helper.findOne(DisplayMessage, { 'msg_type': 'email_not_exist' });
             logger.trace("Login checked resp = ", user_resp);
