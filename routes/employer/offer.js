@@ -619,7 +619,7 @@ router.post('/check_is_candidate', async (req, res) => {
 
         value = req.body.email.toLowerCase();
         if (validator.validate(value) == true) {
-            var user = await common_helper.findOne(User, { "email": value })
+            var user = await common_helper.findOne(User, { "email": value, "is_del": false })
 
             if (user.status == 2 || user.status == 1 && user.data.role_id == "5d9d98e13a0c78039c6dd00e") {
                 res.status(config.OK_STATUS).json({ "status": 1, "message": "valid candidate" });
@@ -631,7 +631,6 @@ router.post('/check_is_candidate', async (req, res) => {
         else {
             res.status(config.BAD_REQUEST).json({ "status": 2, "message": "Email is not valid" })
         }
-
     } catch (error) {
         return res.status(config.BAD_REQUEST).json({ 'message': "Error occurred while fetching", "status": 0 });
     }
