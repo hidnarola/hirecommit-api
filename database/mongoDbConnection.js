@@ -7,16 +7,7 @@ var config = require('../config');
 //Set up default mongoose connection
 var mongoDB = config.database;
 // mongoose.connect(mongoDB, { auth: { authdb: "admin" }, useMongoClient: true });
-(async () => {
-  try {
-    await mongoose.connect(mongoDB, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
-  } catch (error) {
-    console.log(error);
-  }
-})();
+mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 // mongoose.set('useCreateIndex', true);
 // mongoose.set('useFindAndModify', false);
 //Get the default connection

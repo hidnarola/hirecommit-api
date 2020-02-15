@@ -49,8 +49,6 @@ const userpProfile = require('./profile');
 
 router.use("/profile", auth, userpProfile);
 
-const image_auth = require('../middlewares/image_auth');
-
 const saltRounds = 10;
 var common_helper = require('./../helpers/common_helper');
 
@@ -411,67 +409,18 @@ router.get('/candidate_image', async (req, res) => {
       Key
     };
 
-    bucket.getObject(params, (err, data) =>
-      err
-        ? res
+    bucket.getObject(params, (err, data) => {
+      if (err) {
+         res
           .status(config.NOT_FOUND)
           .json({ message: err.message, success: false });
-        : res
+      } else {
+        return res
           .set('Content-Type', data.ContentType)
           .status(config.OK_STATUS)
-          .send(data.Body)
-    });
-  } catch (error) {
-    return res
-      .status(config.BAD_REQUEST)
-      .json({ message: error.message, success: false });
-  }
-});
-
-
-router.post('/image_isExists', async (req, res) => {
-  try {
-    const bucket = new aws.S3({
-      accessKeyId: config.ACCESS_KEY_ID,
-      secretAccessKey: config.SECRET_ACCESS_KEY,
-      region: 'us-east-1'
-    });
-
-    const params = {
-      Bucket: config.BUCKET_NAME,
-      Key: req.body.key
-    };
-
-    bucket.headObject(params, function(err, metadata) {
-      if (err && err.code === 'NotFound') {
-        return res
-          .status(config.NOT_FOUND)
-          .json({ message: 'No Image Found.', success: false });
-        // Handle no object on cloud here
-      } else {
-        bucket.getSignedUrl('getObject', params, (err, data) => {
-          if (err) {
-            return res
-              .status(config.VALIDATION_FAILURE_STATUS)
-              .json({ message: err.message, success: false });
-          } else {
-            return res
-              .status(config.OK_STATUS)
-              .json({ message: 'Image is Exist.', image_url: data });
-          }
-        });
+          .send(data.Body);
       }
     });
-
-    // bucket.getObject(params, (err, data) => {
-    //   if (err) {
-    //     return res.status(config.NOT_FOUND).json({ 'message': err.message, "success": false })
-    //   } else {
-    //     let buff = new Buffer(data.Body);
-    //     let base64data = buff.toString('base64');
-    //     return res.status(config.OK_STATUS).json({ "data": 'data:image/jpg;base64,' + base64data });
-    //   }
-    // });
   } catch (error) {
     return res
       .status(config.BAD_REQUEST)
