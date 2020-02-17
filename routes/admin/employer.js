@@ -10,6 +10,7 @@ const offer_helper = require('../../helpers/offer_helper');
 const Candidate = require('../../models/candidate-detail');
 const CustomField = require('../../models/customfield');
 const MailType = require('../../models/mail_content');
+const DisplayMessage = require('../../models/display_messages');
 const jwt = require('jsonwebtoken');
 const btoa = require('btoa');
 const async = require('async');
@@ -225,6 +226,19 @@ router.put("/deactive_employer/:id", async (req, res) => {
         return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
     }
 });
+
+router.post("/display_message", async (req, res) => {
+    try {
+        var message = await common_helper.findOne(DisplayMessage, { "msg_type": req.body.msg_type });
+        if (message.status === 1) {
+            return res.status(config.OK_STATUS).json({ 'message': message.data.content, "status": 1 });
+        } else {
+            return res.status(config.BAD_REQUEST).json({ 'message': "Somthing went wrong..!", "status": 0 });
+        }
+    } catch (error) {
+        return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
+    }
+})
 
 
 // offer report
