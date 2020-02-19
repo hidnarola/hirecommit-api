@@ -1495,7 +1495,11 @@ router.post('/test_mail', async (req, res) => {
     var mailparser = new MailParser();
     mailparser.on("end", function (reply_data) {
       const attachments = [];
-      reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
+      // reply_data.attachments = [];
+      if((reply_data.attachments) && (reply_data.attachments !== undefined || reply_data.attachments !== null) ){
+        reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
+      }
+
          mail_helper.reply_mail_send("forword_email", {
           "to": "vik@narola.email",
           "from": "vishalkanojiya9727@gmail.com",
@@ -1656,7 +1660,10 @@ router.post('/get_email', async (req, res) => {
             // });
 
             const attachments = [];
-            reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
+            if((reply_data.attachments) && (reply_data.attachments !== undefined || reply_data.attachments !== null) ){
+              reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
+            }
+
               mail_helper.reply_mail_send("forword_email", {
                 "to": emp.email,
                 "from": reply_data.from,
@@ -1721,7 +1728,9 @@ router.post('/get_email', async (req, res) => {
             //   'html': reply_data.html
             // });
             const attachments = [];
-            reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
+            if((reply_data.attachments) && (reply_data.attachments !== undefined || reply_data.attachments !== null) ){
+              reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
+            }
               mail_helper.reply_mail_send("forword_email", {
                 "to": emp.email,
                 "from": reply_data.from,
