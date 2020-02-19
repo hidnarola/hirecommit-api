@@ -510,6 +510,12 @@ router.get('/history/:id', async (req, res) => {
                             "content": content,
                             "createdAt": element.createdAt
                         }
+                    } else if (candidate.data.firstname !== "" ) {
+                        content = content.replace("{employer}", `${employer.data.username}`).replace('{candidate}', candidate.data.firstname);
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
                     } else {
                         content = content.replace("{employer}", `${employer.data.username}`).replace('{candidate}', user.data.email);
                         message = {
@@ -526,8 +532,14 @@ router.get('/history/:id', async (req, res) => {
                             "content": content,
                             "createdAt": element.createdAt
                         }
+                    } else if (candidate.data.firstname !== "") {
+                        content = content.replace("{employer}", `${sub_employer.data.username}`).replace('{candidate}', candidate.data.firstname);
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
                     } else {
-                        content = content.replace("{employer}", `${employer.data.username}`).replace('{candidate}', user.data.email);
+                        content = content.replace("{employer}", `${sub_employer.data.username}`).replace('{candidate}', user.data.email);
                         message = {
                             "content": content,
                             "createdAt": element.createdAt
@@ -541,6 +553,12 @@ router.get('/history/:id', async (req, res) => {
                 if (candidate.status === 1 && user.status === 1) {
                     let content = element.message;
                     if (candidate.data.firstname !== "" && candidate.data.lastname !== "") {
+                        content = content.replace('{candidate}', candidate.data.firstname + " " + candidate.data.lastname);
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
+                    } else if (candidate.data.firstname !== "" && candidate.data.lastname !== "") {
                         content = content.replace('{candidate}', candidate.data.firstname + " " + candidate.data.lastname);
                         message = {
                             "content": content,

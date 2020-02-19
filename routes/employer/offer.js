@@ -291,7 +291,7 @@ router.post("/", async (req, res) => {
                         }
 
                     } else {
-                        let mail_resp = await new_mail_helper.send('d-96c1114e4fbc45458f2039f9fbe14390', {
+                        let mail_resp = await new_mail_helper.sendOffer('d-96c1114e4fbc45458f2039f9fbe14390', {
                             "to": user.data.email,
                             // "reply_to1": `${reply_to.data.email}`,
                             "reply_to2": `${interest_resp.data._id}@em7977.hirecommit.com`,
@@ -3169,10 +3169,10 @@ router.put('/', async (req, res) => {
                 }
 
                 var reply_to = await common_helper.findOne(User, { "_id": offer_upadate.data.created_by });
-                let mail_resp = await new_mail_helper.send('d-96c1114e4fbc45458f2039f9fbe14390', {
+                let mail_resp = await new_mail_helper.sendOffer('d-96c1114e4fbc45458f2039f9fbe14390', {
                     "to": user_email.data.email,
                     // "reply_to1": `${reply_to.data.email}`,
-                    "reply_to2": `${offer_upadate.data._id}@em7977.hirecommit.com`,
+                    // "reply_to2": `${offer_upadate.data._id}@em7977.hirecommit.com`,
                     "subject": "You have received job offer from " + `${companyname}`,
                     "trackid": offer_upadate.data._id
                 }, obj);
@@ -3449,20 +3449,29 @@ router.get('/history/:id', async (req, res) => {
 
         ])
 
-
         for (let index = 0; index < history_data.length; index++) {
             const element = history_data[index];
+
             if (element.employer_id && element.employer_id != undefined) {
                 var employer = await common_helper.findOne(EmployerDetail, { "user_id": element.employer_id });
 
                 var sub_employer = await common_helper.findOne(SubEmployerDetail, { "user_id": element.employer_id });
 
                 var candidate = await common_helper.findOne(CandidateDetail, { "user_id": element.offer.user_id });
+
                 var user = await common_helper.findOne(User, { "_id": element.offer.user_id });
+
                 if (employer.status === 1 && candidate.status === 1 && user.status === 1) {
                     var content = element.message;
                     if (candidate.data.firstname !== "" && candidate.data.lastname !== "") {
                         content = content.replace("{employer}", `${employer.data.username} `).replace('{candidate}', candidate.data.firstname + " " + candidate.data.lastname);
+
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
+                    } else if (candidate.data.firstname !== "") {
+                        content = content.replace("{employer}", `${employer.data.username} `).replace('{candidate}', candidate.data.firstname);
 
                         message = {
                             "content": content,
@@ -3477,6 +3486,7 @@ router.get('/history/:id', async (req, res) => {
                         }
                     }
                     history.push(message);
+
                 } else if (sub_employer.status === 1 && candidate.status === 1 && user.status === 1) {
                     var content = element.message;
                     if (candidate.data.firstname !== "" && candidate.data.lastname !== "") {
@@ -3486,8 +3496,16 @@ router.get('/history/:id', async (req, res) => {
                             "createdAt": element.createdAt
                         }
 
+                    }
+                    else if (candidate.data.firstname !== "") {
+                        content = content.replace("{employer}", `${sub_employer.data.username} `).replace('{candidate}', candidate.data.firstname);
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
+
                     } else {
-                        content = content.replace("{employer}", `${employer.data.username} `).replace('{candidate}', user.data.email);
+                        content = content.replace("{employer}", `${sub_employer.data.username} `).replace('{candidate}', user.data.email);
                         message = {
                             "content": content,
                             "createdAt": element.createdAt
@@ -3502,6 +3520,12 @@ router.get('/history/:id', async (req, res) => {
                     let content = element.message;
                     if (candidate.data.firstname !== "" && candidate.data.lastname !== "") {
                         content = content.replace('{candidate}', candidate.data.firstname + " " + candidate.data.lastname);
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
+                    } else if (candidate.data.firstname !== "") {
+                        content = content.replace('{candidate}', candidate.data.firstname);
                         message = {
                             "content": content,
                             "createdAt": element.createdAt
