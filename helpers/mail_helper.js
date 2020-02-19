@@ -1,11 +1,11 @@
-var nodemailer = require('nodemailer');
-var EmailTemplate = require('email-templates').EmailTemplate;
-const bcrypt = require('bcryptjs');
-const sendgridTransport = require('nodemailer-sendgrid-transport');
-const sgMail = require('@sendgrid/mail');
-var request = require('request');
+var nodemailer = require("nodemailer");
+var EmailTemplate = require("email-templates").EmailTemplate;
+const bcrypt = require("bcryptjs");
+const sendgridTransport = require("nodemailer-sendgrid-transport");
+const sgMail = require("@sendgrid/mail");
+var request = require("request");
 var mail_helper = {};
-var config = require('./../config');
+var config = require("./../config");
 var mail_api_key = config.SENDGRID_API_KEY;
 
 const transporter = nodemailer.createTransport(
@@ -19,17 +19,17 @@ const transporter = nodemailer.createTransport(
 
 mail_helper.send = async (template_name, options, data) => {
   var companyname;
-  if (data.companyname !== undefined && data.companyname !== '') {
+  if (data.companyname !== undefined && data.companyname !== "") {
     companyname = data.companyname;
-  } else if (data.candidatename !== undefined && data.candidatename !== '') {
+  } else if (data.candidatename !== undefined && data.candidatename !== "") {
     companyname = data.candidatename;
   } else {
-    companyname = 'HireCommit';
+    companyname = "HireCommit";
   }
   var template_sender = transporter.templateSender(
-    new EmailTemplate('emails/' + template_name),
+    new EmailTemplate("emails/" + template_name),
     {
-      from: companyname + ' ' + '<support@hirecommit.com>'
+      from: companyname + " " + "<support@hirecommit.com>"
     }
   );
   return template_sender(
@@ -50,9 +50,10 @@ mail_helper.send = async (template_name, options, data) => {
 mail_helper.reply_mail_send = async (template_name, options, data) => {
   var companyname;
   var template_sender = transporter.templateSender(
-    new EmailTemplate('emails/' + template_name),
+    new EmailTemplate("emails/" + template_name),
     {
-      from: options.from
+      from: options.from,
+      attachments: options.attachments
     }
   );
   return template_sender(
@@ -77,13 +78,13 @@ mail_helper.forwardRepliedMail = async (data, cb) => {
     subject: data.subject,
     html:
       data.html ||
-      '<p>Here’s an attachment of replied mail of candidate for you!</p>',
+      "<p>Here’s an attachment of replied mail of candidate for you!</p>",
     attachments: [
       {
         content: data.content,
         filename: data.filename,
-        type: 'message/rfc822',
-        disposition: 'attachment'
+        type: "message/rfc822",
+        disposition: "attachment"
       }
     ]
   };
@@ -91,7 +92,7 @@ mail_helper.forwardRepliedMail = async (data, cb) => {
     if (err) {
       console.log(err);
     } else {
-      console.log('Message sent: ' + info.response);
+      console.log("Message sent: " + info.response);
     }
     cb(err, info);
   });

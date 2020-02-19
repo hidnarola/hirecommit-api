@@ -10,6 +10,7 @@ const offer_helper = require('../../helpers/offer_helper');
 const Candidate = require('../../models/candidate-detail');
 const CustomField = require('../../models/customfield');
 const MailType = require('../../models/mail_content');
+const DisplayMessage = require('../../models/display_messages');
 const jwt = require('jsonwebtoken');
 const btoa = require('btoa');
 const async = require('async');
@@ -225,6 +226,19 @@ router.put("/deactive_employer/:id", async (req, res) => {
         return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
     }
 });
+
+router.post("/display_message", async (req, res) => {
+    try {
+        var message = await common_helper.findOne(DisplayMessage, { "msg_type": req.body.msg_type });
+        if (message.status === 1) {
+            return res.status(config.OK_STATUS).json({ 'message': message.data.content, "status": 1 });
+        } else {
+            return res.status(config.BAD_REQUEST).json({ 'message': "Somthing went wrong..!", "status": 0 });
+        }
+    } catch (error) {
+        return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
+    }
+})
 
 
 // offer report
@@ -496,6 +510,12 @@ router.get('/history/:id', async (req, res) => {
                             "content": content,
                             "createdAt": element.createdAt
                         }
+                    } else if (candidate.data.firstname !== "" ) {
+                        content = content.replace("{employer}", `${employer.data.username}`).replace('{candidate}', candidate.data.firstname);
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
                     } else {
                         content = content.replace("{employer}", `${employer.data.username}`).replace('{candidate}', user.data.email);
                         message = {
@@ -512,8 +532,14 @@ router.get('/history/:id', async (req, res) => {
                             "content": content,
                             "createdAt": element.createdAt
                         }
+                    } else if (candidate.data.firstname !== "") {
+                        content = content.replace("{employer}", `${sub_employer.data.username}`).replace('{candidate}', candidate.data.firstname);
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
                     } else {
-                        content = content.replace("{employer}", `${employer.data.username}`).replace('{candidate}', user.data.email);
+                        content = content.replace("{employer}", `${sub_employer.data.username}`).replace('{candidate}', user.data.email);
                         message = {
                             "content": content,
                             "createdAt": element.createdAt
@@ -527,6 +553,12 @@ router.get('/history/:id', async (req, res) => {
                 if (candidate.status === 1 && user.status === 1) {
                     let content = element.message;
                     if (candidate.data.firstname !== "" && candidate.data.lastname !== "") {
+                        content = content.replace('{candidate}', candidate.data.firstname + " " + candidate.data.lastname);
+                        message = {
+                            "content": content,
+                            "createdAt": element.createdAt
+                        }
+                    } else if (candidate.data.firstname !== "" && candidate.data.lastname !== "") {
                         content = content.replace('{candidate}', candidate.data.firstname + " " + candidate.data.lastname);
                         message = {
                             "content": content,
