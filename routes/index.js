@@ -1488,29 +1488,34 @@ router.post('/match_old_password', async (req, res) => {
 
 router.post('/test_mail', async (req, res) => {
   try {
-    var message = "welcome";
-    var reqBody = await common_helper.findOne(RepliedMail, { "_id": "5e4a79be6723ed00176f3504" });
+    let offer_id = req.body.offer_id;
+    let adhoc_id = req.body.adhoc_id;
+    var previous_status = await common_helper.findOne(Offer,
+      { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
+      console.log(' previous_status:  ==> ', previous_status.data.AdHoc);
+    // var message = "welcome";
+    // var reqBody = await common_helper.findOne(RepliedMail, { "_id": "5e4a79be6723ed00176f3504" });
 
-    var reply_data = reqBody.data.message.email;
-    var mailparser = new MailParser();
-    mailparser.on("end", function (reply_data) {
-      const attachments = [];
-      // reply_data.attachments = [];
-      if((reply_data.attachments) && (reply_data.attachments !== undefined || reply_data.attachments !== null) ){
-        reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
-      }
+    // var reply_data = reqBody.data.message.email;
+    // var mailparser = new MailParser();
+    // mailparser.on("end", function (reply_data) {
+    //   const attachments = [];
+    //   // reply_data.attachments = [];
+    //   if((reply_data.attachments) && (reply_data.attachments !== undefined || reply_data.attachments !== null) ){
+    //     reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
+    //   }
 
-         mail_helper.reply_mail_send("forword_email", {
-          "to": "vik@narola.email",
-          "from": "vishalkanojiya9727@gmail.com",
-          "subject": "Reply Mail",
-          "attachments": attachments
-        }, {
-          'html': reply_data.html
-        });
-        });
-      mailparser.write(reply_data);
-      mailparser.end();
+    //      mail_helper.reply_mail_send("forword_email", {
+    //       "to": "vik@narola.email",
+    //       "from": "vishalkanojiya9727@gmail.com",
+    //       "subject": "Reply Mail",
+    //       "attachments": attachments
+    //     }, {
+    //       'html': reply_data.html
+    //     });
+    //     });
+    //   mailparser.write(reply_data);
+    //   mailparser.end();
     res.status(200).send('success');
   } catch (error) {
     return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
@@ -1553,9 +1558,9 @@ router.post('/email_opened', async (req, res) => {
 
           var previous_status = await common_helper.findOne(Offer,
             { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
-            console.log(' previous_status:  ==> ',previous_status);
-          if (previous_status.status == 1) {
-            console.log(' previous_status:  ==> ',previous_status.status);
+            if (previous_status.status == 1) {
+              console.log(' previous_status :  ==> ', previous_status.data.AdHoc);
+            // console.log(' previous_status:  ==> ',previous_status.status);
             var update_offer_communication = await common_helper.update(Offer,
               { "_id": offer_id, "AdHoc._id": adhoc_id },
               {
