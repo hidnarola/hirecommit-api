@@ -372,7 +372,7 @@ router.put('/', async (req, res) => {
                                 var obj = {
                                     "message": message,
                                     "subject": comm.subject,
-                                    "companyname": companyname
+                                    "companyname": companyname_resp.data.companyname
                                 }
 
                                 let mail_resp = await communication_mail_helper.send('d-e3cb56d304e1461d957ffd8fe141819c', {
@@ -402,7 +402,7 @@ router.put('/', async (req, res) => {
                                 var obj = {
                                     "message": message,
                                     "subject": comm.subject,
-                                    "companyname": companyname
+                                    "companyname": companyname_resp.data.companyname
                                 }
 
                                 let mail_resp = await communication_mail_helper.send('d-e3cb56d304e1461d957ffd8fe141819c', {
@@ -505,7 +505,7 @@ router.put('/', async (req, res) => {
                                 var obj = {
                                     "message": message,
                                     "subject": comm.AdHoc_subject,
-                                    "companyname": companyname
+                                    "companyname": companyname_resp.data.companyname
                                 }
                                 let mail_resp = await communication_mail_helper.send('d-e3cb56d304e1461d957ffd8fe141819c', {
                                     "to": candidate_email.data.email,
