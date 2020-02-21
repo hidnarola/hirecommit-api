@@ -1499,7 +1499,7 @@ router.post('/test_mail', async (req, res) => {
 
     // var previous_status =await Offer.find(
     //   {"_id": offer_id, "AdHoc.AdHoc_reply": false},
-    //   { AdHoc: {$elemMatch: {_id:adhoc_id, reply: false}}});
+    //   { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_reply: false}}});
 
     // var previous_status1 =await Offer.find(
     //   {"_id": offer_id, "AdHoc.AdHoc_reply": true},
@@ -1679,13 +1679,25 @@ router.post('/get_email', async (req, res) => {
         var communication_id = split_data[1];
         var mail = await common_helper.insert(RepliedMail, { "offerid": offer_id, "message": reqBody });
 
-        var previous_status = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.reply": false });
+        // var previous_status = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.reply": false });
 
-        var previous_status1 = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.reply": true });
+        // var previous_status1 = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.reply": true });
 
-        var previous_status2 = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.open": false });
+        // var previous_status2 = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.open": false });
 
-        if (previous_status2.status == 1) {
+        var previous_status =await Offer.find(
+          {"_id": offer_id, "communication.reply": false},
+          { communication: {$elemMatch: {_id:communication_id, reply: false}}});
+
+        var previous_status1 =await Offer.find(
+          {"_id": offer_id, "communication.reply": true},
+          { communication: {$elemMatch: {_id:communication_id, reply: true}}});
+
+        var previous_status2 =await Offer.find(
+          {"_id": offer_id, "communication.open": false},
+          { communication: {$elemMatch: {_id:communication_id, open: false}}});
+          // previous_status2.status == 1
+        if (previous_status2[0].communication.length > 0) {
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "communication._id": communication_id }, {
             $set: {
               "communication.$.reply": true,
@@ -1694,14 +1706,14 @@ router.post('/get_email', async (req, res) => {
               "communication.$.open_date": new Date()
             }
           }).populate('created_by', { email: 1 }).lean();
-        } else if (previous_status.status == 1) {
+        } else if (previous_status[0].communication.length > 0) {
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "communication._id": communication_id }, {
             $set: {
               "communication.$.reply": true,
               "communication.$.reply_date": new Date()
             }
           }).populate('created_by', { email: 1 }).lean();
-        } else if (previous_status1.status == 1) {
+        } else if (previous_status1[0].communication.length > 0) {
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "communication._id": communication_id }, {
             $set: {
               "communication.$.reply": true
@@ -1748,11 +1760,23 @@ router.post('/get_email', async (req, res) => {
         var adhoc_id = split_data[1];
         var mail = await common_helper.insert(RepliedMail, { "offerid": offer_id, "message": reqBody });
 
-        var previous_status = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_reply": false });
-        var previous_status1 = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_reply": true });
-        var previous_status2 = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
+        // var previous_status = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_reply": false });
+        // var previous_status1 = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_reply": true });
+        // var previous_status2 = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
 
-        if (previous_status2.status == 1) {
+        var previous_status =await Offer.find(
+          {"_id": offer_id, "AdHoc.AdHoc_reply": false},
+          { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_reply: false}}});
+
+        var previous_status1 =await Offer.find(
+          {"_id": offer_id, "AdHoc.AdHoc_reply": true},
+          { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_reply: true}}});
+
+        var previous_status2 =await Offer.find(
+          {"_id": offer_id, "AdHoc.AdHoc_open": false},
+          { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_open: false}}});
+
+        if (previous_status2[0].AdHoc.length > 0) {
           console.log(' : "inside" ==> ', "inside");
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "AdHoc._id": adhoc_id }, {
             $set: {
@@ -1762,7 +1786,7 @@ router.post('/get_email', async (req, res) => {
               "AdHoc.$.AdHoc_open_date": new Date()
             }
           }).populate('created_by', { email: 1 }).lean();
-        } else if (previous_status.status == 1) {
+        } else if (previous_status[0].AdHoc.length > 0) {
           console.log(' : "inside 1" ==> ', "inside 1");
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "AdHoc._id": adhoc_id }, {
             $set: {
@@ -1770,7 +1794,7 @@ router.post('/get_email', async (req, res) => {
               "AdHoc.$.AdHoc_reply_date": new Date()
             }
           }).populate('created_by', { email: 1 }).lean();
-        } else if (previous_status1.status == 1) {
+        } else if (previous_status1[0].AdHoc.length > 0) {
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "AdHoc._id": adhoc_id }, {
             $set: {
               "AdHoc.$.AdHoc_reply": true
