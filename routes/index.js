@@ -1489,10 +1489,52 @@ router.post('/match_old_password', async (req, res) => {
 router.post('/test_mail', async (req, res) => {
   try {
     let offer_id = req.body.offer_id;
-    let adhoc_id = req.body.adhoc_id;
-    var previous_status = await common_helper.findOne(Offer,
-      { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
-      console.log(' previous_status:  ==> ', previous_status.data.AdHoc);
+    let communication_id = req.body.adhoc_id;
+    previous_status = ""
+    // var previous_status =await  Offer.findOne({ "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": true});
+
+    // var previous_status =await Offer.find(
+    //   {"_id": offer_id, "AdHoc.AdHoc_open": false},
+    //   { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_open: false}}});
+
+    // var previous_status =await Offer.find(
+    //   {"_id": offer_id, "AdHoc.AdHoc_reply": false},
+    //   { AdHoc: {$elemMatch: {_id:adhoc_id, reply: false}}});
+
+    // var previous_status1 =await Offer.find(
+    //   {"_id": offer_id, "AdHoc.AdHoc_reply": true},
+    //   { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_reply: true}}});
+
+    // var previous_status2 =await Offer.find(
+    //   {"_id": offer_id, "AdHoc.AdHoc_open": false},
+    //   { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_open: false}}});
+
+
+
+    var previous_status =await Offer.find(
+      {"_id": offer_id, "communication.reply": false},
+      { communication: {$elemMatch: {_id:communication_id, reply: false}}});
+
+    var previous_status1 =await Offer.find(
+      {"_id": offer_id, "communication.reply": true},
+      { communication: {$elemMatch: {_id:communication_id, reply: true}}});
+
+    var previous_status2 =await Offer.find(
+      {"_id": offer_id, "communication.open": false},
+      { communication: {$elemMatch: {_id:communication_id, open: false}}});
+
+
+      if (previous_status2[0].communication.length > 0){
+        console.log(' previous_status2 :  ==> ', previous_status2[0].communication);
+      } else if (previous_status[0].communication.length > 0) {
+        console.log(' previous_status:  ==> ', previous_status[0].communication);
+      } else if (previous_status1[0].communication.length > 0) {
+        console.log(' previous_status1 :  ==> ', previous_status1[0].communication);
+      }
+
+    // var previous_status = await common_helper.findOne(Offer,
+    //   { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
+      // console.log(' previous_status:  ==> ', previous_status[0].communication);
     // var message = "welcome";
     // var reqBody = await common_helper.findOne(RepliedMail, { "_id": "5e4a79be6723ed00176f3504" });
 
@@ -1535,9 +1577,16 @@ router.post('/email_opened', async (req, res) => {
           var offer_id = split_data[0];
           var communication_id = split_data[1];
 
-          var previous_status = await common_helper.findOne(Offer,
-            { "_id": offer_id, "communication._id": communication_id, "communication.open": false })
-          if (previous_status.status == 1) {
+          // var previous_status = await common_helper.findOne(Offer,
+          //   { "_id": offer_id, "communication._id": communication_id, "communication.open": false })
+            // previous_status.status == 1
+
+            var previous_status =await Offer.find(
+              {"_id": offer_id, "communication.open": false},
+              { communication: {$elemMatch: {_id:communication_id, open: false}}});
+
+          if (previous_status[0].communication.length > 0) {
+            console.log(' : previous_status[0].communication ==> ', previous_status[0].communication);
             var update_offer_communication = await common_helper.update(Offer,
               { "_id": offer_id, "communication._id": communication_id },
               {
@@ -1547,7 +1596,7 @@ router.post('/email_opened', async (req, res) => {
                 }
               })
             console.log(' : success comm ==> ');
-          } else if (previous_status.status == 2) {
+          } else if (previous_status[0].communication.length < 1) {
             res.status(config.BAD_REQUEST).json({ "status": 2, "message": "No data found" });
           } else {
             res.status(config.BAD_REQUEST).json({ "status": 2, "message": "Error occurred while updating data." });
@@ -1556,10 +1605,17 @@ router.post('/email_opened', async (req, res) => {
           var offer_id = split_data[0];
           var adhoc_id = split_data[1];
 
-          var previous_status = await common_helper.findOne(Offer,
-            { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
-            if (previous_status.status == 1) {
-              console.log(' previous_status :  ==> ', previous_status.data.AdHoc);
+          // var previous_status = await common_helper.findOne(Offer,
+          //   { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
+
+          // previous_status.status == 1
+
+          var previous_status =await Offer.find(
+            {"_id": offer_id, "AdHoc.AdHoc_open": false},
+            { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_open: false}}});
+
+            if (previous_status[0].AdHoc.length > 0) {
+              console.log(' previous_status[0].AdHoc :  ==> ', previous_status[0].AdHoc);
             // console.log(' previous_status:  ==> ',previous_status.status);
             var update_offer_communication = await common_helper.update(Offer,
               { "_id": offer_id, "AdHoc._id": adhoc_id },
@@ -1572,7 +1628,7 @@ router.post('/email_opened', async (req, res) => {
 
             console.log('success  ==> success');
             res.send("success");
-          } else if (previous_status.status == 2) {
+          } else if (previous_status[0].AdHoc.length < 1) {
             res.status(config.BAD_REQUEST).json({ "status": 2, "message": "No data found" });
           } else {
             res.status(config.BAD_REQUEST).json({ "status": 2, "message": "Error occurred while updating data." });
