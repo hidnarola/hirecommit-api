@@ -484,7 +484,7 @@ router.put('/', async (req, res) => {
                                     "trackid": sub_account_upadate.data._id + "_" + comm._id + "_" + "adhoc"
                                 }, obj);
 
-                                console.log(' : mail_resp hi==> ', mail_resp);
+                                // console.log(' : mail_resp hi==> ', mail_resp);
                                 if (mail_resp.status == 1) {
                                     var update_offer_communication = await common_helper.update(Offer,
                                         { "_id": sub_account_upadate.data._id, "AdHoc._id": comm._id },
@@ -552,7 +552,7 @@ router.put('/', async (req, res) => {
                                                 "AdHoc.$.AdHoc_mail_send": true
                                             }
                                         })
-                                    console.log(' : update_offer_communication ==> ', update_offer_communication);
+                                    // console.log(' : update_offer_communication ==> ', update_offer_communication);
                                 }
 
                             }
