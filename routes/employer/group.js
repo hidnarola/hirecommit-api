@@ -25,7 +25,7 @@ router.get("/groups_list", async (req, res) => {
         else {
             var user_id = req.userInfo.id
         }
-        // flag: "undraft",
+
         var group_list = await common_helper.find(group, { is_del: false, "emp_id": new ObjectId(user_id) });
         if (group_list.status === 1) {
             return res.status(config.OK_STATUS).json({ 'message': "group List", "status": 1, data: group_list });
@@ -137,7 +137,6 @@ router.post('/get', async (req, res) => {
             let sortingObject = {
                 [sortOrderColumn]: sortOrder
             }
-            // console.log(sortingObject);
 
             var user = await common_helper.findOne(User, { _id: new ObjectId(req.userInfo.id) })
             if (user.status == 1 && user.data.role_id == ("5d9d99003a0c78039c6dd00f")) {
@@ -248,23 +247,14 @@ router.put('/', async (req, res) => {
             var user_id = req.userInfo.id
         }
 
-        // var privious_group = await common_helper.findOne(group, {
-        //     is_del: false, flag: "undraft",
-        //     "_id": new ObjectId(id), name: RE, "emp_id": new ObjectId(user_id)
-        // })
-        // console.log(' : privious_group ==> ', privious_group.data);
         const RE = { $regex: new RegExp(`^${req.body.name}$`, 'gi') };
-        // console.log(RE);
 
         var exist_group = await common_helper.findOne(group, {
             is_del: false, flag: "undraft",
             name: RE, "emp_id": new ObjectId(user_id), _id: { $ne: new ObjectId(id) }
         })
 
-
-        // console.log(' : exist_group ==> ', exist_group.status)
         if (exist_group.status == 2) {
-            // console.log(' : obj ==> ', obj);
             var group_upadate = await common_helper.update(group, { "_id": new ObjectId(id) }, obj)
 
             const reqData = req.body.data;
@@ -275,17 +265,9 @@ router.put('/', async (req, res) => {
             var find_communication = await common_helper.findOne(GroupDetail, { "group_id": req.body.id })
             if (find_communication.status == 1) {
                 var response = await common_helper.update(GroupDetail, { "group_id": req.body.id }, grp_data);
-                // var obj = {
-                //     flag: "undraft"
-                // }
-                // var responses = await common_helper.update(group, { "_id": (req.body.id) }, obj);
             }
             else {
                 var response = await common_helper.insert(GroupDetail, grp_data);
-                // var obj = {
-                //     flag: "undraft"
-                // }
-                // var responses = await common_helper.update(group, { "_id": (req.body.id) }, obj);
             }
 
             if (group_upadate.status == 0) {
@@ -297,7 +279,6 @@ router.put('/', async (req, res) => {
         } else {
             res.status(config.BAD_REQUEST).json({ "status": 0, "message": "This group is already exist" });
         }
-        // var exist_group = await common_helper.find(group, { name: { $regex: req.body.name, $options: "$i" } })
     } catch (error) {
         return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
     }

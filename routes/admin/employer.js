@@ -902,7 +902,6 @@ router.put('/update', async (req, res) => {
                         "lower_content": lower_content,
                         "confirm_url": config.WEBSITE_URL + "confirmation/" + reset_token
                     });
-                    // console.log(' : mail_resp ==> ', mail_response);
                 }
             }
         }

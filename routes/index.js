@@ -53,7 +53,6 @@ const saltRounds = 10;
 var common_helper = require('./../helpers/common_helper');
 
 var captcha_secret = config.captcha_secret
-// var captcha_secret = "6LfCebwUAAAAAKbmzPwPxLn0DWi6S17S_WQRPvnK"
 
 
 //get user
@@ -189,10 +188,10 @@ router.post("/candidate_register", async (req, res) => {
         notEmpty: true,
         errorMessage: "contactno is required"
       },
-      // "recaptcha": {
-      //   notEmpty: true,
-      //   errorMessage: "captcha is required"
-      // }
+      "recaptcha": {
+        notEmpty: true,
+        errorMessage: "captcha is required"
+      }
     };
 
     var validate = passwordValidatorSchema
@@ -294,7 +293,6 @@ router.post("/candidate_register", async (req, res) => {
                       var currentfilename = file.name;
                       var rename = currentfilename.split('.');
                       var timestamp = moment().unix();
-                      // this.FOLDER +  + '_' + file.name,
                       var uploded_file = rename[0] + '-' + timestamp + '.' + rename[1];
 
                       var params = {
@@ -308,13 +306,11 @@ router.post("/candidate_register", async (req, res) => {
                           console.log('error in callback');
                           console.log(err);
                         }
-                        console.log({ data });
                         const nameArray = data.key.split('.')
                         reg_obj.documentimage = data.key;
                         reg_obj.docimage = `${folder}/${uuid()}.${
                           nameArray[nameArray.length - 1]
                         }`;
-                        console.log({ reg_obj });
 
                         var interest_resp = await Candidate_Detail.findOneAndUpdate({ user_id: interest_user_resp._id }, reg_obj, {
                           new: true,
@@ -450,13 +446,6 @@ router.post('/check_document_size', async (req, res) => {
           })
       }
     }
-
-    // if (documentImage.size > 5000000) {
-    //
-    // }
-    // else {
-    // res.status(config.OK_STATUS).json({ "status": 1, "message": "File Accepted" });
-    // }
   } catch (error) {
     return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
   }
@@ -464,7 +453,6 @@ router.post('/check_document_size', async (req, res) => {
 
 router.post('/check_document_number', async (req, res) => {
   try {
-    // if (req.body.documentNumber !== "") {
     const RE = { $regex: new RegExp(`^${req.body.documentNumber}$`, 'gi') };
 
     var candidate_resp = await common_helper.find(Candidate_Detail,
@@ -473,13 +461,11 @@ router.post('/check_document_number', async (req, res) => {
         "documentNumber": RE
       });
 
-    // console.log(' : candidate_resp ==> ', candidate_resp);
     if (candidate_resp.status == 1 && candidate_resp.data.length > 0) {
       res.status(config.BAD_REQUEST).json({ "status": 0, "message": "This Document Number is Already Registered." });
     } else {
       res.status(config.OK_STATUS).json({ "status": 1, "message": "This is Valid Document Number." });
     }
-    // }
   } catch (err) {
     return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false });
   }
@@ -550,7 +536,6 @@ router.post("/employer_register", async (req, res) => {
       }
     };
 
-    // console.log(' : req.body ==> ', req.body);
     var validate = passwordValidatorSchema
       .is().min(8)
       // .symbols()	                                 // Minimum length 8
@@ -717,10 +702,10 @@ router.post('/login', async (req, res) => {
         notEmpty: true,
         errorMessage: "password is required."
       },
-      // "recaptcha": {
-      //   notEmpty: true,
-      //   errorMessage: "captcha is required"
-      // }
+      "recaptcha": {
+        notEmpty: true,
+        errorMessage: "captcha is required"
+      }
     };
     req.checkBody(schema);
     var errors = req.validationErrors();
@@ -729,7 +714,6 @@ router.post('/login', async (req, res) => {
       await request(verificationURL, async (error, response, body) => {
         body = JSON.parse(body);
         if (body.success !== undefined && !body.success) {
-          // res.json({ "status": 0, "responseError": "Failed captcha verification" });
           res.status(config.BAD_REQUEST).json({ message: "Failed captcha verification" });
         }
         else {
@@ -1472,7 +1456,6 @@ router.put('/change_password', async (req, res) => {
 
 router.post('/match_old_password', async (req, res) => {
   try {
-    // var password_dcrypt = await common_helper.passwordHash(req.body.oldpassword);
     var password = await common_helper.findOne(User, { "_id": req.body.id });
     const match = await bcrypt.compare(req.body.oldpassword, password.data.password);
 
@@ -1491,25 +1474,6 @@ router.post('/test_mail', async (req, res) => {
     let offer_id = req.body.offer_id;
     let communication_id = req.body.adhoc_id;
     previous_status = ""
-    // var previous_status =await  Offer.findOne({ "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": true});
-
-    // var previous_status =await Offer.find(
-    //   {"_id": offer_id, "AdHoc.AdHoc_open": false},
-    //   { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_open: false}}});
-
-    // var previous_status =await Offer.find(
-    //   {"_id": offer_id, "AdHoc.AdHoc_reply": false},
-    //   { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_reply: false}}});
-
-    // var previous_status1 =await Offer.find(
-    //   {"_id": offer_id, "AdHoc.AdHoc_reply": true},
-    //   { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_reply: true}}});
-
-    // var previous_status2 =await Offer.find(
-    //   {"_id": offer_id, "AdHoc.AdHoc_open": false},
-    //   { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_open: false}}});
-
-
 
     var previous_status =await Offer.find(
       {"_id": offer_id, "communication.reply": false},
@@ -1531,33 +1495,6 @@ router.post('/test_mail', async (req, res) => {
       } else if (previous_status1[0].communication.length > 0) {
         console.log(' previous_status1 :  ==> ', previous_status1[0].communication);
       }
-
-    // var previous_status = await common_helper.findOne(Offer,
-    //   { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
-      // console.log(' previous_status:  ==> ', previous_status[0].communication);
-    // var message = "welcome";
-    // var reqBody = await common_helper.findOne(RepliedMail, { "_id": "5e4a79be6723ed00176f3504" });
-
-    // var reply_data = reqBody.data.message.email;
-    // var mailparser = new MailParser();
-    // mailparser.on("end", function (reply_data) {
-    //   const attachments = [];
-    //   // reply_data.attachments = [];
-    //   if((reply_data.attachments) && (reply_data.attachments !== undefined || reply_data.attachments !== null) ){
-    //     reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
-    //   }
-
-    //      mail_helper.reply_mail_send("forword_email", {
-    //       "to": "vik@narola.email",
-    //       "from": "vishalkanojiya9727@gmail.com",
-    //       "subject": "Reply Mail",
-    //       "attachments": attachments
-    //     }, {
-    //       'html': reply_data.html
-    //     });
-    //     });
-    //   mailparser.write(reply_data);
-    //   mailparser.end();
     res.status(200).send('success');
   } catch (error) {
     return res.status(config.BAD_REQUEST).json({ 'message': error.message, "success": false })
@@ -1577,10 +1514,6 @@ router.post('/email_opened', async (req, res) => {
           var offer_id = split_data[0];
           var communication_id = split_data[1];
 
-          // var previous_status = await common_helper.findOne(Offer,
-          //   { "_id": offer_id, "communication._id": communication_id, "communication.open": false })
-            // previous_status.status == 1
-
             var previous_status =await Offer.find(
               {"_id": offer_id, "communication.open": false},
               { communication: {$elemMatch: {_id:communication_id, open: false}}});
@@ -1596,6 +1529,7 @@ router.post('/email_opened', async (req, res) => {
                 }
               })
             console.log(' : success comm ==> ');
+            res.status(200).send("success");
           } else if (previous_status[0].communication.length < 1) {
             res.status(config.BAD_REQUEST).json({ "status": 2, "message": "No data found" });
           } else {
@@ -1605,18 +1539,12 @@ router.post('/email_opened', async (req, res) => {
           var offer_id = split_data[0];
           var adhoc_id = split_data[1];
 
-          // var previous_status = await common_helper.findOne(Offer,
-          //   { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
-
-          // previous_status.status == 1
-
           var previous_status =await Offer.find(
             {"_id": offer_id, "AdHoc.AdHoc_open": false},
             { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_open: false}}});
 
-            if (previous_status[0].AdHoc.length > 0) {
-              console.log(' previous_status[0].AdHoc :  ==> ', previous_status[0].AdHoc);
-            // console.log(' previous_status:  ==> ',previous_status.status);
+          if (previous_status[0] && previous_status[0].AdHoc.length > 0) {
+            console.log(' previous_status[0].AdHoc :  ==> ', previous_status[0].AdHoc);
             var update_offer_communication = await common_helper.update(Offer,
               { "_id": offer_id, "AdHoc._id": adhoc_id },
               {
@@ -1627,30 +1555,23 @@ router.post('/email_opened', async (req, res) => {
               })
 
             console.log('success  ==> success');
-            res.send("success");
-          } else if (previous_status[0].AdHoc.length < 1) {
+            res.status(200).send("success");
+          } else if (previous_status[0] && previous_status[0].AdHoc.length < 1) {
             res.status(config.BAD_REQUEST).json({ "status": 2, "message": "No data found" });
           } else {
-            res.status(config.BAD_REQUEST).json({ "status": 2, "message": "Error occurred while updating data." });
+            res.status(config.BAD_REQUEST).json({ "status": 2, "message": "Something went wrong..!" });
           }
+        } else {
+          console.log("No Track Id Found..!");
+          res.status(400).send("No Track Id Found..!");
         }
       } else {
         console.log("No Track Id Found..!");
-        // var offer_resp = await common_helper.findOne(Offer, { "_id": open_id });
-        // var obj = {
-        //   email_open: true,
-        //   open_At: new Date()
-        // }
-        // if (offer_resp.status == 1 && offer_resp.data.email_open === false && reqBody.event === 'open') {
-        //   var offer_update_resp = await common_helper.update(Offer, { "_id": open_id }, obj);
-        //   reqBody = [];
-        // } else {
-        //   reqBody = [];
-        //   console.log('Offer is already opened..! Or offer is deleted..!');
-        // }
+        res.status(400).send("No Track Id Found..!");
       }
     } else {
       console.log("No Track Id Found..!");
+      res.status(400).send("No Track Id Found..!");
     }
   } catch (error) {
     res.status(500).send(error.message);
@@ -1679,12 +1600,6 @@ router.post('/get_email', async (req, res) => {
         var communication_id = split_data[1];
         var mail = await common_helper.insert(RepliedMail, { "offerid": offer_id, "message": reqBody });
 
-        // var previous_status = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.reply": false });
-
-        // var previous_status1 = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.reply": true });
-
-        // var previous_status2 = await common_helper.findOne(Offer, { "_id": offer_id, "communication._id": communication_id, "communication.open": false });
-
         var previous_status =await Offer.find(
           {"_id": offer_id, "communication.reply": false},
           { communication: {$elemMatch: {_id:communication_id, reply: false}}});
@@ -1696,8 +1611,8 @@ router.post('/get_email', async (req, res) => {
         var previous_status2 =await Offer.find(
           {"_id": offer_id, "communication.open": false},
           { communication: {$elemMatch: {_id:communication_id, open: false}}});
-          // previous_status2.status == 1
-        if (previous_status2[0].communication.length > 0) {
+
+        if (previous_status2[0] && previous_status2[0].communication.length > 0) {
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "communication._id": communication_id }, {
             $set: {
               "communication.$.reply": true,
@@ -1706,14 +1621,14 @@ router.post('/get_email', async (req, res) => {
               "communication.$.open_date": new Date()
             }
           }).populate('created_by', { email: 1 }).lean();
-        } else if (previous_status[0].communication.length > 0) {
+        } else if (previous_status[0] && previous_status[0].communication.length > 0) {
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "communication._id": communication_id }, {
             $set: {
               "communication.$.reply": true,
               "communication.$.reply_date": new Date()
             }
           }).populate('created_by', { email: 1 }).lean();
-        } else if (previous_status1[0].communication.length > 0) {
+        } else if (previous_status1[0] && previous_status1[0].communication.length > 0) {
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "communication._id": communication_id }, {
             $set: {
               "communication.$.reply": true
@@ -1725,13 +1640,6 @@ router.post('/get_email', async (req, res) => {
         for (const emp of all_employer.data) {
           var mailparser = new MailParser();
           mailparser.on("end", function (reply_data) {
-            // let mail_resp = mail_helper.reply_mail_send("forword_email", {
-            //   "to": emp.email,
-            //   "from": reply_data.from,
-            //   "subject": reply_data.subject
-            // }, {
-            //   'html': reply_data.html
-            // });
 
             const attachments = [];
             if((reply_data.attachments) && (reply_data.attachments !== undefined || reply_data.attachments !== null) ){
@@ -1755,14 +1663,9 @@ router.post('/get_email', async (req, res) => {
       }
 
       if (split_data.length == 3 && split_data[2] === "adhoc") {
-        // console.log("adhoc");
         var offer_id = split_data[0];
         var adhoc_id = split_data[1];
         var mail = await common_helper.insert(RepliedMail, { "offerid": offer_id, "message": reqBody });
-
-        // var previous_status = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_reply": false });
-        // var previous_status1 = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_reply": true });
-        // var previous_status2 = await common_helper.findOne(Offer, { "_id": offer_id, "AdHoc._id": adhoc_id, "AdHoc.AdHoc_open": false });
 
         var previous_status =await Offer.find(
           {"_id": offer_id, "AdHoc.AdHoc_reply": false},
@@ -1776,7 +1679,7 @@ router.post('/get_email', async (req, res) => {
           {"_id": offer_id, "AdHoc.AdHoc_open": false},
           { AdHoc: {$elemMatch: {_id:adhoc_id, AdHoc_open: false}}});
 
-        if (previous_status2[0].AdHoc.length > 0) {
+        if (previous_status2[0] && previous_status2[0].AdHoc.length > 0) {
           console.log(' : "inside" ==> ', "inside");
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "AdHoc._id": adhoc_id }, {
             $set: {
@@ -1786,7 +1689,7 @@ router.post('/get_email', async (req, res) => {
               "AdHoc.$.AdHoc_open_date": new Date()
             }
           }).populate('created_by', { email: 1 }).lean();
-        } else if (previous_status[0].AdHoc.length > 0) {
+        } else if (previous_status[0] && previous_status[0].AdHoc.length > 0) {
           console.log(' : "inside 1" ==> ', "inside 1");
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "AdHoc._id": adhoc_id }, {
             $set: {
@@ -1794,7 +1697,7 @@ router.post('/get_email', async (req, res) => {
               "AdHoc.$.AdHoc_reply_date": new Date()
             }
           }).populate('created_by', { email: 1 }).lean();
-        } else if (previous_status1[0].AdHoc.length > 0) {
+        } else if (previous_status1[0] && previous_status1[0].AdHoc.length > 0) {
           var update_communication = await Offer.findOneAndUpdate({ "_id": offer_id, "AdHoc._id": adhoc_id }, {
             $set: {
               "AdHoc.$.AdHoc_reply": true
@@ -1806,13 +1709,7 @@ router.post('/get_email', async (req, res) => {
         for (const emp of all_employer.data) {
           var mailparser = new MailParser();
           mailparser.on("end", function (reply_data) {
-            // let mail_resp = mail_helper.reply_mail_send("forword_email", {
-            //   "to": emp.email,
-            //   "from": reply_data.from,
-            //   "subject": reply_data.subject
-            // }, {
-            //   'html': reply_data.html
-            // });
+
             const attachments = [];
             if((reply_data.attachments) && (reply_data.attachments !== undefined || reply_data.attachments !== null) ){
               reply_data.attachments.map(e => attachments.push({ filename: e.fileName, content: e.content }));
@@ -1834,51 +1731,6 @@ router.post('/get_email', async (req, res) => {
       }
     } else {
       console.log("No id found..!");
-      // var offer_resp = await common_helper.findOne(Offer, { "_id": id });
-      // //  && offer_resp.data.reply === false
-      // if (offer_resp.status == 1) {
-      //   var all_employer = await common_helper.find(User, { $or: [{ "_id": offer_resp.data.employer_id }, { "emp_id": offer_resp.data.employer_id }] });
-      //   var mail = await common_helper.insert(RepliedMail, { "offerid": id, "message": reqBody });
-      //   var offer = await Offer.findOneAndUpdate({ "_id": id }, { "reply": true, "reply_At": new Date() }).populate('created_by', { email: 1 }).lean();
-      //   for (const emp of all_employer.data) {
-
-
-      //     // console.log(' : reply_data ==> ', reqBody);
-      //     // mail_helper.forwardRepliedMail({
-      //     //   // offer.created_by.email
-      //     //   to: emp.email,
-      //     //   from: reqBody.from,
-      //     //   subject: reqBody.subject,
-      //     //   content: reqBody.email,
-      //     //   filename: `${mail.data._id}.eml`,
-      //     //   html: '<p>Here’s an attachment of replied mail of candidate for you!</p>'
-      //     // }, (err, info) => {
-      //     //   if (err) {
-      //     //     console.log(error);
-      //     //   }
-      //     //   else {
-      //     //     console.log('Message forwarded: ' + info.response);
-      //     //   }
-      //     // });
-      //     // console.log(' : reply_data ==> ', reply_data);
-      //     var mailparser = new MailParser();
-      //     mailparser.on("end", function (reply_data) {
-      //       let mail_resp = mail_helper.reply_mail_send("forword_email", {
-      //         "to": emp.email,
-      //         "from": reply_data.from,
-      //         "subject": reply_data.subject
-      //       }, {
-      //         'html': reply_data.html
-      //       });
-      //     });
-
-      //     mailparser.write(reply_data);
-      //     mailparser.end();
-      //   }
-      //   res.status(200).send('success');
-      // } else {
-      //   console.log("Already replied..! Or offer was deleted..!");
-      // }
     }
   } catch (error) {
     res.status(500).send(error.message);
